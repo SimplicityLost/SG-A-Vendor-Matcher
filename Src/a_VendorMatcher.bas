@@ -1,4 +1,4 @@
-Attribute VB_Name = "Module1"
+Attribute VB_Name = "a_VendorMatcher"
 Function VendorMatch(inputrow As Range, vendict As Scripting.Dictionary, vendorlist As Worksheet, Optional oldwrksht As Worksheet = Nothing, Optional checklist As Worksheet = Nothing) As String
     'Grab important sections of Row and assign them to variables
     For j = 1 To 26
@@ -84,6 +84,8 @@ Function VendorMatch(inputrow As Range, vendict As Scripting.Dictionary, vendorl
     Case (InStr(1, control1, "gm", 1) > 0) And (InStr(1, control1, "p", 1) > 0) And (InStr(1, control1, "w", 1) > 0)
         VendorMatch = "CDK GLOBAL LLC"
     
+    'Case (InStr(1, doc_desc, "1AP", 1) > 0 Or InStr(1, doc_desc, "1-AP", 1))
+    '    VendorMatch = "PAYROLL, ADP ETIME, BENEFITFOCUS, DISCOVERY BENEFITS, ICIMS, & CONCUR CHARGES"
     
     'More Robust Searches based on which category the entry falls into
     
@@ -108,9 +110,13 @@ Function VendorMatch(inputrow As Range, vendict As Scripting.Dictionary, vendorl
     
     Case (doc_desc = "Check" And inputrow.Cells(1, 7).Value = "60" And Not checklist Is Nothing) 'Check entries
         VendorMatch = CheckMatch(refnum, inputrow.Cells(1, 2), checklist)
-               
+        
+    'Case (doc_desc = "Journal Voucher") 'Journal Voucher entries
+        'VendorMatch = JVMatch(control1)
+    
+       
     Case Else 'If everything else fails, try anything else
-
+    'venname = "" 'ICBMatch(det_desc, vendict, vendorlist)
     venname = LAOMatch(control1, vendict, vendorlist, 0)
     If venname = "" Then venname = LAOMatch(det_desc, vendict, vendorlist, 0)
     If venname = "" Then venname = LAOMatch(control1, vendict, vendorlist, 0)
