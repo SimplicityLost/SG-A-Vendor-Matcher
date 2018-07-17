@@ -16,6 +16,7 @@ Function VMFileGetter()
     Dim checkNameAndPath As Variant
     Dim checklist As Workbook
     Dim checksheet As Worksheet
+    Dim oldsheetarray As Variant
     
     Set workingbook = ThisWorkbook
     Set datasheet = workingbook.Worksheets("Paste Data Here")
@@ -29,6 +30,12 @@ Function VMFileGetter()
     Else
         Set oldworkbook = Workbooks.Open(fNameAndPath, True, True)
         Set reusewrksht = oldworkbook.Sheets("All Data")
+    End If
+    
+    If Not reusewrksht Is Nothing Then
+        oldsheetarray = sheettoarray(reusewrksht)
+    Else
+        oldsheetarray = False
     End If
     
     'Ask for, and open, the list of checks to use
@@ -90,7 +97,7 @@ Function VMFileGetter()
         If (lineval < 0) Then totalcred = totalcred + lineval
         If IsEmpty(transdata(i, 14)) Then
             transdata(i, 14) = _
-                VendorMatch(Application.Index(transdata, i), vendict, vendorlist, reusewrksht, checksheet)
+                VendorMatch(Application.Index(transdata, i), vendict, vendorlist, oldsheetarray, checksheet)
             If Not (transdata(i, 14) = "") Then
                 If (lineval > 0) Then matchdeb = matchdeb + lineval
                 If (lineval < 0) Then matchcred = matchcred + lineval

@@ -1,5 +1,5 @@
 Attribute VB_Name = "a_VendorMatcher"
-Function VendorMatch(inputrow, vendict As Scripting.Dictionary, vendorlist As Worksheet, Optional oldwrksht As Worksheet = Nothing, Optional checklist As Worksheet = Nothing) As String
+Function VendorMatch(inputrow, vendict As Scripting.Dictionary, vendorlist As Worksheet, Optional oldwrksht As Variant = False, Optional checklist As Worksheet = Nothing) As String
     'Grab important sections of Row and assign them to variables
     For j = 1 To 26
         If IsError(inputrow(j)) Then VendorMatch = "": Exit Function
@@ -14,8 +14,8 @@ Function VendorMatch(inputrow, vendict As Scripting.Dictionary, vendorlist As Wo
     
     
     'Check to see if we've already assigned a vendor last quarter and pass it up.
-    If Not oldwrksht Is Nothing Then
-        oldven = ReuseOldVen(refnum, acct_date, inputrow(1), inputrow(12), oldwrksht)
+    If Not oldwrksht = False Then
+        oldven = reuseoldven(refnum, acct_date, inputrow(1), inputrow(12), oldwrksht)
         If Not (oldven = "") Then VendorMatch = oldven: Exit Function
     End If
      
@@ -255,8 +255,22 @@ End Select
 JVMatch = venname
 
 End Function
+Function reuseoldven(refnum, acctdate, storenum, amt, oldsheet) As String
+    For i = 2 To UBound(oldsheet, 1)
+        If oldsheet(i, 8) = refnum And _
+            oldsheet(i, 4) = acctdate And _
+            oldsheet(i, 1) = storenum And _
+            oldsheet(i, 12) = amt Then
+                reuseoldven = oldsheet(i, 14)
+                Exit Function
+        End If
+    Next i
+    reuseoldven = ""
+    
+End Function
 
-Function ReuseOldVen(refnum, acctdate, storenum, amt, oldsheet As Worksheet) As String
+
+Function ReuseOldVen2(refnum, acctdate, storenum, amt, oldsheet As Worksheet) As String
     
     'Use advanced filters to list all checks with the right check number and store name (which should be unique) and snag it
     oldsheet.Range("A999998").Value = "Reference" 'Build tiny filter table way at the bottom of the check sheet
@@ -275,7 +289,7 @@ Function ReuseOldVen(refnum, acctdate, storenum, amt, oldsheet As Worksheet) As 
     venname = oldsheet.Range("N1000001").Value 'grab the vendor name from the unique row
     oldsheet.Rows("999998:1000100").Delete 'delete the rows created for the advanced filter
     
-    ReuseOldVen = venname
+    reuseoldven = venname
     
 End Function
 
