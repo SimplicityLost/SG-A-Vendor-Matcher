@@ -106,7 +106,7 @@ Function VendorMatch(inputrow As Range, vendict As Scripting.Dictionary, vendorl
         
     
     Case (doc_desc = "Check" And Not checklist Is Nothing) 'Check entries
-        VendorMatch = CheckMatch(refnum, inputrow.Cells(1, 2), checklist)
+        VendorMatch = CheckMatch(refnum, inputrow.Cells(1, 4), checklist)
  
     
     VendorMatch = venname
@@ -268,13 +268,13 @@ Function ReuseOldVen(refnum, oldsheet As Worksheet) As String
     
 End Function
 
-Function CheckMatch(refnum, storename, checklist As Worksheet)
+Function CheckMatch(refnum, checkdate, checklist As Worksheet)
     
     'Use advanced filters to list all checks with the right check number and store name (which should be unique) and snag it
     checklist.Range("A499998").Value = "Reference" 'Build tiny filter table way at the bottom of the check sheet
-    checklist.Range("B499998").Value = "Name"
-    checklist.Range("A499999").Value = refnum 'Use reference number and store name for criteria
-    checklist.Range("B499999").Value = storename
+    checklist.Range("B499998").Value = "AcctgDate"
+    checklist.Range("A499999").Value = refnum 'Use reference number and check date for criteria
+    checklist.Range("B499999").Value = CDate(checkdate)
     
     'Execute an advanced filter using criteria that copies the (in theory) unique row from the check sheet
     checklist.Range("A1:AD499990").AdvancedFilter Action:=xlFilterCopy, CriteriaRange:= _
