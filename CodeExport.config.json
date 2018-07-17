@@ -1,7 +1,8 @@
 {
 	"Module Paths": {
 		"Sheet1": "Src/Sheet1.cls",
-		"a_VendorMatcher": "src/a_VendorMatcher.bas"
+		"a_VendorMatcher": "src/a_VendorMatcher.bas",
+		"b_VMFileGetter": "src/b_VMFileGetter.bas"
 	},
 	"References": [
 		{
