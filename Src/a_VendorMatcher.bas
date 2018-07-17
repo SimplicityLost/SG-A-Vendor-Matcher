@@ -1,21 +1,21 @@
 Attribute VB_Name = "a_VendorMatcher"
-Function VendorMatch(inputrow As Range, vendict As Scripting.Dictionary, vendorlist As Worksheet, Optional oldwrksht As Worksheet = Nothing, Optional checklist As Worksheet = Nothing) As String
+Function VendorMatch(inputrow, vendict As Scripting.Dictionary, vendorlist As Worksheet, Optional oldwrksht As Worksheet = Nothing, Optional checklist As Worksheet = Nothing) As String
     'Grab important sections of Row and assign them to variables
     For j = 1 To 26
-        If IsError(inputrow.Cells(1, j).Value) Then VendorMatch = "": Exit Function
+        If IsError(inputrow(j)) Then VendorMatch = "": Exit Function
     Next j
-    doc_desc = inputrow.Cells(1, 9).Value
-    det_desc = inputrow.Cells(1, 18).Value
-    control1 = inputrow.Cells(1, 13).Value
-    control2 = inputrow.Cells(1, 15).Value
-    refnum = inputrow.Cells(1, 8).Value
-    acct_desc = inputrow.Cells(1, 11).Value
-    
+    doc_desc = inputrow(9)
+    det_desc = inputrow(18)
+    control1 = inputrow(13)
+    control2 = inputrow(15)
+    refnum = inputrow(8)
+    acct_desc = inputrow(11)
+    acct_date = inputrow(4)
     
     
     'Check to see if we've already assigned a vendor last quarter and pass it up.
     If Not oldwrksht Is Nothing Then
-        oldven = ReuseOldVen(refnum, oldwrksht)
+        oldven = ReuseOldVen(refnum, acct_date, inputrow(1), inputrow(12), oldwrksht)
         If Not (oldven = "") Then VendorMatch = oldven: Exit Function
     End If
      
@@ -95,7 +95,6 @@ Function VendorMatch(inputrow As Range, vendict As Scripting.Dictionary, vendorl
     
     Case (doc_desc = "STORE LAO PAYABLES ALLOCATION") 'LAO Payable entries
         VendorMatch = LAOMatch(det_desc, vendict, vendorlist, 0)
-        
     
     Case ((InStr(1, doc_desc, "inter", 1) > 0) And (InStr(1, doc_desc, "co", 1) > 0)) 'Inter-company Billing entries
         VendorMatch = ICBMatch(control2, vendict, vendorlist) 'Check Control2 entry first
@@ -104,9 +103,9 @@ Function VendorMatch(inputrow As Range, vendict As Scripting.Dictionary, vendorl
             VendorMatch = ICBMatch(control1, vendict, vendorlist)
         End If
         
-    
+
     Case (doc_desc = "Check" And Not checklist Is Nothing) 'Check entries
-        VendorMatch = CheckMatch(refnum, inputrow.Cells(1, 4), checklist)
+        VendorMatch = CheckMatch(refnum, acct_date, checklist)
  
     
     VendorMatch = venname
@@ -257,14 +256,26 @@ JVMatch = venname
 
 End Function
 
-Function ReuseOldVen(refnum, oldsheet As Worksheet) As String
-    foundrow = Application.Match(refnum, oldsheet.Range("H:H"), 0) 'Look up the reference number in the old sheet, which should be unique
-    If IsError(foundrow) Then ReuseOldVen = "": Exit Function 'If the search fails, bail
+Function ReuseOldVen(refnum, acctdate, storenum, amt, oldsheet As Worksheet) As String
     
-    oldvenname = Application.WorksheetFunction.Index(oldsheet.Range("N:N"), foundrow) 'If something was found, grab the vendor name associated with it
-    If IsError(oldvenname) Then ReuseOldVen = "": Exit Function 'If it returned an error, bail
+    'Use advanced filters to list all checks with the right check number and store name (which should be unique) and snag it
+    oldsheet.Range("A999998").Value = "Reference" 'Build tiny filter table way at the bottom of the check sheet
+    oldsheet.Range("B999998").Value = "AcctgDate"
+    oldsheet.Range("C999998").Value = "CoNo"
+    oldsheet.Range("D999998").Value = "Amt"
+    oldsheet.Range("A999999").Value = refnum 'Use reference number and check date for criteria
+    oldsheet.Range("B999999").Value = CDate(acctdate)
+    oldsheet.Range("C999999").Value = storenum
+    oldsheet.Range("D999999").Value = amt
     
-    ReuseOldVen = oldvenname
+    'Execute an advanced filter using criteria that copies the (in theory) unique row from the check sheet
+    oldsheet.Range("A1:AD999990").AdvancedFilter Action:=xlFilterCopy, CriteriaRange:= _
+        oldsheet.Range("A999998:D999999"), CopyToRange:=oldsheet.Range("A1000000"), Unique:= _
+        False
+    venname = oldsheet.Range("N1000001").Value 'grab the vendor name from the unique row
+    oldsheet.Rows("999998:1000100").Delete 'delete the rows created for the advanced filter
+    
+    ReuseOldVen = venname
     
 End Function
 

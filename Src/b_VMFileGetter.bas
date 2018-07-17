@@ -4,18 +4,21 @@ Function VMFileGetter()
     Application.Calculation = xlCalculationManual 'disable calcs to save time
 
     Dim vendorlist As Worksheet
+    Dim transdata
         
     Dim fNameAndPath As Variant
     Dim oldworkbook As Workbook
     Dim reusewrksht As Worksheet
     
     Dim workingbook As Workbook
+    Dim datasheet As Worksheet
     
     Dim checkNameAndPath As Variant
     Dim checklist As Workbook
     Dim checksheet As Worksheet
     
     Set workingbook = ThisWorkbook
+    Set datasheet = workingbook.Worksheets("Paste Data Here")
     
     'Ask for, and open, the last quarterly report
     MsgBox ("Please select the analysis for this category for last quarter.")
@@ -40,9 +43,9 @@ Function VMFileGetter()
     End If
 
     'Check to see if user forgot to insert vendor column and insert it if it's missing
-    If workingbook.Worksheets("Paste Data Here").Range("N1").Value = "Control2" Then
-        workingbook.Worksheets("Paste Data Here").Range("N1").EntireColumn.Insert
-        workingbook.Worksheets("Paste Data Here").Range("N1").Value = "Vendor Name"
+    If datasheet.Range("N1").Value = "Control2" Then
+        datasheet.Range("N1").EntireColumn.Insert
+        datasheet.Range("N1").Value = "Vendor Name"
     End If
     
     Set vendorlist = workingbook.Worksheets("Vendor List")
@@ -66,33 +69,38 @@ Function VMFileGetter()
     Dim lineval As Double
     
     'Get the row count and start the timer for the match
-    numrows = workingbook.Worksheets("Paste Data Here").UsedRange.Rows.Count
+    numrows = datasheet.UsedRange.Rows.Count
     starttime = Timer
     
     'Convert all text to numbers if appropriate
-    workingbook.Worksheets("Paste Data Here").Columns(13).NumberFormat = "0"
-    workingbook.Worksheets("Paste Data Here").Columns(13).Value = workingbook.Worksheets("Paste Data Here").Columns(13).Value
-    workingbook.Worksheets("Paste Data Here").Columns(15).NumberFormat = "0"
-    workingbook.Worksheets("Paste Data Here").Columns(15).Value = workingbook.Worksheets("Paste Data Here").Columns(15).Value
-    workingbook.Worksheets("Paste Data Here").Columns(18).NumberFormat = "0"
-    workingbook.Worksheets("Paste Data Here").Columns(18).Value = workingbook.Worksheets("Paste Data Here").Columns(18).Value
+    datasheet.Columns(13).NumberFormat = "0"
+    datasheet.Columns(13).Value = datasheet.Columns(13).Value
+    datasheet.Columns(15).NumberFormat = "0"
+    datasheet.Columns(15).Value = datasheet.Columns(15).Value
+    datasheet.Columns(18).NumberFormat = "0"
+    datasheet.Columns(18).Value = datasheet.Columns(18).Value
     
     'Run the vendor match on all rows
-    For i = 2 To numrows
+    transdata = datasheet.Range("A2:AB" & numrows).Value
+    
+    For i = 1 To UBound(transdata, 1)
         If (i Mod 500 = 0) Then DoEvents
-        lineval = workingbook.Worksheets("Paste Data Here").Cells(i, 12).Value
+        lineval = transdata(i, 12)
         If (lineval > 0) Then totaldeb = totaldeb + lineval
         If (lineval < 0) Then totalcred = totalcred + lineval
-        If IsEmpty(workingbook.Worksheets("Paste Data Here").Cells(i, 14)) Then
-            workingbook.Worksheets("Paste Data Here").Cells(i, 14).Value = _
-                VendorMatch(workingbook.Worksheets("Paste Data Here").Rows(i), vendict, vendorlist, reusewrksht, checksheet)
-            If Not (workingbook.Worksheets("Paste Data Here").Cells(i, 14).Value = "") Then
+        If IsEmpty(transdata(i, 14)) Then
+            transdata(i, 14) = _
+                VendorMatch(Application.Index(transdata, i), vendict, vendorlist, reusewrksht, checksheet)
+            If Not (transdata(i, 14) = "") Then
                 If (lineval > 0) Then matchdeb = matchdeb + lineval
                 If (lineval < 0) Then matchcred = matchcred + lineval
             End If
         End If
         If (i Mod 500 = 0) Then Application.StatusBar = "Updating " & CStr(Int((i / numrows) * 100)) & "%" 'Show the progress for the match in the status bar in %
     Next i
+    
+    datasheet.Range("A2:AD" & numrows).Value = transdata
+    
     Application.Calculation = xlCalculationAutomatic 'turn back on the calculation
     finaltime = Int(Timer - starttime) 'figure out how long the match took
     
@@ -106,7 +114,7 @@ Function VMFileGetter()
     ratecred = Int((matchcred / totalcred) * 100)
     
     
-    nummatches = WorksheetFunction.CountA(workingbook.Worksheets("Paste Data Here").Range("N:N")) - 1 'get the number of matches that were made
+    nummatches = WorksheetFunction.CountA(datasheet.Range("N:N")) - 1 'get the number of matches that were made
     
     'close the workbooks for last quarter and checks
     If Not oldworkbook Is Nothing Then oldworkbook.Close (False)
