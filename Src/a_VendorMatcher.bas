@@ -1,5 +1,20 @@
 Attribute VB_Name = "a_VendorMatcher"
+Option Explicit
+
 Function VendorMatch(inputrow, vendict As Scripting.Dictionary, vendorlist As Worksheet, Optional oldwrksht As Variant = False, Optional checklist As Worksheet = Nothing) As String
+    Dim j As Integer
+    Dim doc_desc As String
+    Dim det_desc As String
+    Dim control1 As String
+    Dim control2 As String
+    Dim refnum As String
+    Dim acct_desc As String
+    Dim acct_date As Date
+          
+    Dim oldven As String
+    Dim venname As String
+    
+    
     'Grab important sections of Row and assign them to variables
     For j = 1 To 26
         If IsError(inputrow(j)) Then VendorMatch = "": Exit Function
@@ -114,9 +129,17 @@ Function VendorMatch(inputrow, vendict As Scripting.Dictionary, vendorlist As Wo
 End Function
 
 Function ICBMatch(stringin, vendict As Scripting.Dictionary, vendorlist As Worksheet)
-    srchval = Trim(stringin) 'Trim the search string
+    Dim srchval As String
     Dim elem As Variant
     Dim elem2 As Variant
+    Dim venext() As String
+    Dim namefields() As String
+    Dim splitstr() As String
+    Dim foundrow As Variant
+    Dim venname As String
+       
+    
+    srchval = Trim(stringin) 'Trim the search string
     venext = Split(" Inc, llc, ltd, co", ",") 'Build an array of the major company extensions for later checking
     namefields = Split("B:B,C:C,W:W", ",") 'Build an array with the column labels for all places that a company name might appear
     
@@ -180,7 +203,16 @@ End Function
 Function LAOMatch(stringin, vendict As Scripting.Dictionary, vendorlist As Worksheet, x As Integer)
     Dim elem As Variant
     Dim elem2 As Variant
+    Dim venname As String
     Dim checkrange As Range
+    Dim srchval As String
+    Dim namefields() As String
+    Dim venext() As String
+    Dim foundrow As Variant
+    Dim srchnoext() As String
+    Dim andswitch() As String
+    Dim ampswitch() As String
+    
     srchval = Trim(stringin) 'Trim the string in prep for search
     namefields = Split("B:B,C:C,W:W", ",") 'Build an array of column ranges where names can appear
     venext = Split(" Inc, Llc, ltd, co", ",") 'Build an array of typical endings to company names
@@ -294,6 +326,7 @@ Function ReuseOldVen2(refnum, acctdate, storenum, amt, oldsheet As Worksheet) As
 End Function
 
 Function CheckMatch(refnum, checkdate, checklist As Worksheet)
+    Dim venname As String
     
     'Use advanced filters to list all checks with the right check number and store name (which should be unique) and snag it
     checklist.Range("A499998").Value = "Reference" 'Build tiny filter table way at the bottom of the check sheet
@@ -339,6 +372,10 @@ Function FTCMatch(control1, control2, det_desc)
 End Function
 
 Function StoreMatch(control1, vendict As Scripting.Dictionary, vendorlist As Worksheet)
+    Dim srchval As String
+    Dim foundrow As Variant
+    Dim venname As String
+    
     srchval = Trim(control1)
     foundrow = Application.Match(srchval, vendorlist.Range("A:A"), 0)
     

@@ -1,11 +1,18 @@
 Attribute VB_Name = "b_VMFileGetter"
+Option Explicit
+
 Function VMFileGetter()
+    
     Application.ScreenUpdating = False 'disable screen update to save time
     Application.Calculation = xlCalculationManual 'disable calcs to save time
 
     Dim vendorlist As Worksheet
     Dim transdata
-        
+    Dim numvenrows As Integer
+    Dim numrows As Integer
+    Dim nummatches As Integer
+    
+    
     Dim fNameAndPath As Variant
     Dim oldworkbook As Workbook
     Dim reusewrksht As Worksheet
@@ -17,6 +24,12 @@ Function VMFileGetter()
     Dim checklist As Workbook
     Dim checksheet As Worksheet
     Dim oldsheetarray As Variant
+    
+    Dim starttime As Double
+    Dim finaltime As Double
+    
+    Dim i As Integer
+    Dim j As Integer
     
     Set workingbook = ThisWorkbook
     Set datasheet = workingbook.Worksheets("Paste Data Here")
@@ -74,6 +87,8 @@ Function VMFileGetter()
     Dim totalcred As Double
     Dim matchcred As Double
     Dim lineval As Double
+    Dim ratedeb As Double
+    Dim ratecred As Double
     
     'Get the row count and start the timer for the match
     numrows = datasheet.UsedRange.Rows.Count
